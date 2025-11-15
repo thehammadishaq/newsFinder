@@ -1,0 +1,350 @@
+[
+  {
+    "source": "https://cryptoadventure.com/",
+    "sourceType": "css",
+    "pageUrl": "https://cryptoadventure.com/",
+    "sections": [
+      {
+        "sectionName": "Blog",
+        "selectors": {
+          "title": "article.post > header.entry-header > h2.entry-title > a",
+          "link": "article.post > header.entry-header > h2.entry-title > a",
+          "date": "article.post > div.entry-meta > span.posted-on > time.entry-date",
+          "author": "article.post > div.entry-meta > span.byline > span.author > a",
+          "category": "article.post > div.entry-meta > span.cat-links > a"
+        },
+        "confidence": 0.95,
+        "detectedInChunk": 3,
+        "sourceUrl": "https://cryptoadventure.com/"
+      },
+      {
+        "sectionName": "News Articles",
+        "selectors": {
+          "title": ".slider-each.post-card > .post-description > a.postlink > .post-title > p",
+          "link": ".slider-each.post-card > .post-description > a.postlink",
+          "date": ".slider-each.post-card > .post-description > .author-info > .post-date > p",
+          "description": ".slider-each.post-card > .post-description > .post-text > p",
+          "author": ".slider-each.post-card > .post-description > .author-info > .post-author-avatar > .post-author > p > a",
+          "category": ".slider-each.post-card > .post-tags > .post-tags > span.post-tag > a",
+          "ticker": null
+        },
+        "confidence": 0.95,
+        "detectedInChunk": 13,
+        "diagnosis": {
+          "repeatHint": 6
+        },
+        "sourceUrl": "https://cryptoadventure.com/"
+      },
+      {
+        "sectionName": "Batch 16",
+        "selectors": {
+          "title": ".postlink > .post-title > p",
+          "link": ".postlink",
+          "date": ".post-date > p",
+          "description": ".post-text > p",
+          "author": ".post-author > p > a",
+          "category": ".post-tags > span.post-tag > a"
+        },
+        "confidence": 0.9,
+        "detectedInChunk": 16,
+        "diagnosis": {
+          "repeatHint": 6
+        },
+        "sourceUrl": "https://cryptoadventure.com/"
+      },
+      {
+        "sectionName": "What’s Trending Today",
+        "selectors": {
+          "title": ".slider-each.post-card > .post-description > .postlink > .post-title > p",
+          "link": ".slider-each.post-card > .post-description > .postlink",
+          "date": ".slider-each.post-card > .post-description > .post-date > p",
+          "description": ".slider-each.post-card > .post-description > .post-text > p",
+          "author": ".slider-each.post-card > .post-description > .author-info > .post-author > p > a"
+        },
+        "confidence": 0.9,
+        "detectedInChunk": 20,
+        "diagnosis": {
+          "repeatHint": 6
+        },
+        "sourceUrl": "https://cryptoadventure.com/"
+      },
+      {
+        "sectionName": "article-list",
+        "selectors": {
+          "title": ".slider-each.post-card > a.postlink > div.post-title > p",
+          "link": ".slider-each.post-card > a.postlink",
+          "date": ".slider-each.post-card > div.post-description > div.author-info > div.post-date > p",
+          "description": ".slider-each.post-card > div.post-description > div.post-text > p",
+          "author": ".slider-each.post-card > div.post-description > div.author-info > div.post-author-avatar > div.post-author > p > a"
+        },
+        "confidence": 0.9,
+        "detectedInChunk": 23,
+        "diagnosis": {
+          "repeatHint": 6
+        },
+        "sourceUrl": "https://cryptoadventure.com/"
+      },
+      {
+        "sectionName": "Press Releases",
+        "selectors": {
+          "title": ".slider-each.small-card > .post-description > a.postlink > .post-title > p",
+          "link": ".slider-each.small-card > .post-description > a.postlink",
+          "date": ".slider-each.small-card > .post-description + .author-info > .post-date > p",
+          "description": null,
+          "author": ".slider-each.small-card > .post-description + .author-info > .post-author > a:first-child",
+          "category": null
+        },
+        "confidence": 0.9,
+        "detectedInChunk": 26,
+        "diagnosis": {
+          "repeatHint": 6
+        },
+        "sourceUrl": "https://cryptoadventure.com/"
+      },
+      {
+        "sectionName": "Batch 29",
+        "selectors": {
+          "title": ".post-card > .post-description > a.postlink > .post-title > p",
+          "link": ".post-card > .post-description > a.postlink",
+          "date": ".post-card > .post-description > .author-info > .post-date > p",
+          "description": ".post-card > .post-description > .post-text > p",
+          "author": ".post-card > .post-description > .author-info > .post-author-avatar > .post-author > p > a",
+          "category": ".post-card > .post-description > .post-tags > .post-tags > .post-tag > a"
+        },
+        "confidence": 0.7,
+        "detectedInChunk": 29,
+        "diagnosis": {
+          "repeatHint": 6
+        },
+        "sourceUrl": "https://cryptoadventure.com/"
+      }
+    ]
+  },
+  {
+    "source": "https://inews.co.uk/",
+    "sourceType": "css",
+    "pageUrl": "https://inews.co.uk/",
+    "sections": [
+      {
+        "sectionName": "News & Editorial",
+        "selectors": {
+          "title": ".inews__post-section .inews__post .inews__post__content-headline > h2 > a",
+          "link": ".inews__post-section .inews__post .inews__post__content-headline > h2 > a",
+          "category": ".inews__post-section .inews__post .inews__post__category > a > .category-name",
+          "description": ".inews__post-section .inews__post .inews__post__content > p"
+        },
+        "confidence": 0.95,
+        "detectedInChunk": 14,
+        "diagnosis": {
+          "repeatHint": 165
+        },
+        "sourceUrl": "https://inews.co.uk/"
+      },
+      {
+        "sectionName": "Editorial News List",
+        "selectors": {
+          "title": ".inews__post__content-headline > h2 > a",
+          "link": ".inews__post__content-headline > h2 > a",
+          "description": ".inews__post__content > p",
+          "category": ".inews__post__category > a > .category-name"
+        },
+        "confidence": 0.95,
+        "detectedInChunk": 16,
+        "diagnosis": {
+          "repeatHint": 165
+        },
+        "sourceUrl": "https://inews.co.uk/"
+      },
+      {
+        "sectionName": "More news",
+        "selectors": {
+          "title": ".inews__post-section[data-type=\"PostSection4xTeaser\"] .inews__post .inews__post__content-headline h2 > a",
+          "link": ".inews__post-section[data-type=\"PostSection4xTeaser\"] .inews__post .inews__post__content-headline h2 > a",
+          "category": ".inews__post-section[data-type=\"PostSection4xTeaser\"] .inews__post .inews__post__category a",
+          "description": ".inews__post-section[data-type=\"PostSection4xTeaser\"] .inews__post .inews__post__content p"
+        },
+        "confidence": 0.95,
+        "detectedInChunk": 20,
+        "diagnosis": {
+          "repeatHint": 165
+        },
+        "sourceUrl": "https://inews.co.uk/"
+      },
+      {
+        "sectionName": "World",
+        "selectors": {
+          "title": ".inews__post-section[data-type=\"PostSection1xHero2xTeaser2xJot\"] .inews__post .inews__post__content-headline > h2 > a",
+          "link": ".inews__post-section[data-type=\"PostSection1xHero2xTeaser2xJot\"] .inews__post .inews__post__content-headline > h2 > a",
+          "category": ".inews__post-section[data-type=\"PostSection1xHero2xTeaser2xJot\"] .inews__post .inews__post__category > a",
+          "description": ".inews__post-section[data-type=\"PostSection1xHero2xTeaser2xJot\"] .inews__post .inews__post__content > p"
+        },
+        "confidence": 0.95,
+        "detectedInChunk": 23,
+        "diagnosis": {
+          "repeatHint": 165
+        },
+        "sourceUrl": "https://inews.co.uk/"
+      },
+      {
+        "sectionName": "Life & More",
+        "selectors": {
+          "title": ".inews__post-section[data-type=\"PostSection2xHero4xTeaser\"] .inews__post .inews__post__content-headline > h2 > a",
+          "link": ".inews__post-section[data-type=\"PostSection2xHero4xTeaser\"] .inews__post .inews__post__content-headline > h2 > a",
+          "category": ".inews__post-section[data-type=\"PostSection2xHero4xTeaser\"] .inews__post .inews__post__category > a",
+          "description": ".inews__post-section[data-type=\"PostSection2xHero4xTeaser\"] .inews__post .inews__post__content > p"
+        },
+        "confidence": 0.95,
+        "detectedInChunk": 23,
+        "diagnosis": {
+          "repeatHint": 165
+        },
+        "sourceUrl": "https://inews.co.uk/"
+      },
+      {
+        "sectionName": "Travel",
+        "selectors": {
+          "title": ".inews__post-section .inews__post__content-headline > h2 > a",
+          "link": ".inews__post-section .inews__post__content-headline > h2 > a",
+          "category": ".inews__post-section .inews__post__category > a > .category-name"
+        },
+        "confidence": 0.95,
+        "detectedInChunk": 25,
+        "diagnosis": {
+          "repeatHint": 165
+        },
+        "sourceUrl": "https://inews.co.uk/"
+      },
+      {
+        "sectionName": "Subscriber Newsletters",
+        "selectors": {
+          "title": ".inews__post.post_label-newsletter .inews__post__content-headline > h2 > a",
+          "link": ".inews__post.post_label-newsletter .inews__post__content-headline > h2 > a",
+          "category": ".inews__post.post_label-newsletter .inews__post__category > a"
+        },
+        "confidence": 0.95,
+        "detectedInChunk": 26,
+        "diagnosis": {
+          "repeatHint": 165
+        },
+        "sourceUrl": "https://inews.co.uk/"
+      },
+      {
+        "sectionName": "Opinion",
+        "selectors": {
+          "title": ".inews__post .inews__post__content-headline > h2 > a",
+          "link": ".inews__post .inews__post__content-headline > h2 > a",
+          "author": ".inews__post .inews__post__category > a"
+        },
+        "confidence": 0.9,
+        "detectedInChunk": 17,
+        "diagnosis": {
+          "repeatHint": 165
+        },
+        "sourceUrl": "https://inews.co.uk/"
+      },
+      {
+        "sectionName": "Politics",
+        "selectors": {
+          "title": ".inews__post-section[data-type=\"PostSection1xHero2xTeaser2xJot\"] .inews__post__content-headline > h2 > a",
+          "link": ".inews__post-section[data-type=\"PostSection1xHero2xTeaser2xJot\"] .inews__post__content-headline > h2 > a",
+          "description": ".inews__post-section[data-type=\"PostSection1xHero2xTeaser2xJot\"] .inews__post__content > p",
+          "category": ".inews__post-section[data-type=\"PostSection1xHero2xTeaser2xJot\"] .inews__post__category > a > .category-name"
+        },
+        "confidence": 0.9,
+        "detectedInChunk": 18,
+        "diagnosis": {
+          "repeatHint": 165
+        },
+        "sourceUrl": "https://inews.co.uk/"
+      },
+      {
+        "sectionName": "Editor's Picks",
+        "selectors": {
+          "title": ".inews__post-section[data-type=\"PostSection2xHero4xTeaser\"] .inews__post__content-headline > h2 > a",
+          "link": ".inews__post-section[data-type=\"PostSection2xHero4xTeaser\"] .inews__post__content-headline > h2 > a",
+          "description": ".inews__post-section[data-type=\"PostSection2xHero4xTeaser\"] .inews__post__content > p",
+          "category": ".inews__post-section[data-type=\"PostSection2xHero4xTeaser\"] .inews__post__category > a > .category-name"
+        },
+        "confidence": 0.9,
+        "detectedInChunk": 18,
+        "diagnosis": {
+          "repeatHint": 165
+        },
+        "sourceUrl": "https://inews.co.uk/"
+      },
+      {
+        "sectionName": "Sport",
+        "selectors": {
+          "title": ".inews__post-section[data-type=\"PostSection1xHero2xTeaser2xJot\"] .inews__post .inews__post__content-headline h2 > a",
+          "link": ".inews__post-section[data-type=\"PostSection1xHero2xTeaser2xJot\"] .inews__post .inews__post__content-headline h2 > a",
+          "category": ".inews__post-section[data-type=\"PostSection1xHero2xTeaser2xJot\"] .inews__post .inews__post__category a",
+          "description": ".inews__post-section[data-type=\"PostSection1xHero2xTeaser2xJot\"] .inews__post .inews__post__content p"
+        },
+        "confidence": 0.9,
+        "detectedInChunk": 20,
+        "diagnosis": {
+          "repeatHint": 165
+        },
+        "sourceUrl": "https://inews.co.uk/"
+      },
+      {
+        "sectionName": "Sports Articles",
+        "selectors": {
+          "title": ".inews__post__content-headline h2 > a",
+          "link": ".inews__post__content-headline h2 > a",
+          "category": ".inews__post__category .category-name"
+        },
+        "confidence": 0.9,
+        "detectedInChunk": 21,
+        "diagnosis": {
+          "repeatHint": 165
+        },
+        "sourceUrl": "https://inews.co.uk/"
+      },
+      {
+        "sectionName": "Travel",
+        "selectors": {
+          "title": ".inews__post:not(.post_label-newsletter) .inews__post__content-headline > h2 > a",
+          "link": ".inews__post:not(.post_label-newsletter) .inews__post__content-headline > h2 > a",
+          "category": ".inews__post:not(.post_label-newsletter) .inews__post__category > a"
+        },
+        "confidence": 0.9,
+        "detectedInChunk": 26,
+        "diagnosis": {
+          "repeatHint": 165
+        },
+        "sourceUrl": "https://inews.co.uk/"
+      },
+      {
+        "sectionName": "Editorial News List",
+        "selectors": {
+          "title": ".inews__post-jot .inews__post__content-headline > h2 > a",
+          "link": ".inews__post-jot .inews__post__content-headline > h2 > a",
+          "category": ".inews__post-jot .inews__post__category > a > .category-name",
+          "description": ".inews__post-jot .inews__post__content > p"
+        },
+        "confidence": 0.8,
+        "detectedInChunk": 15,
+        "diagnosis": {
+          "repeatHint": 165
+        },
+        "sourceUrl": "https://inews.co.uk/"
+      },
+      {
+        "sectionName": "News",
+        "selectors": {
+          "title": ".post > .entry-title > a",
+          "link": ".post > .entry-title > a",
+          "date": ".post > .entry-date",
+          "description": ".post > .entry-summary",
+          "author": ".post > .author > a",
+          "category": ".post > .cat-links > a",
+          "ticker": ".post > .ticker > a"
+        },
+        "confidence": 0.7,
+        "detectedInChunk": 5,
+        "sourceUrl": "https://inews.co.uk/"
+      }
+    ]
+  }
+]

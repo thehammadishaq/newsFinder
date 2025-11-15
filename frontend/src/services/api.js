@@ -117,10 +117,37 @@ export const apiService = {
     return response.data
   },
 
+  uploadStreamFile: async (file) => {
+    const formData = new FormData()
+    formData.append('file', file)
+    const response = await api.post('/api/v1/upload/stream', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    })
+    return response.data
+  },
+
+  fetchStreamFromUrl: async (url) => {
+    const response = await api.post('/api/v1/fetch/stream', { url })
+    return response.data
+  },
+
   downloadFile: async (fileType) => {
     const response = await api.get(`/api/v1/download/${fileType}`, {
       responseType: 'blob',
     })
+    return response.data
+  },
+
+  // Articles
+  getArticles: async (params = {}) => {
+    const response = await api.get('/api/v1/articles', { params })
+    return response.data
+  },
+
+  getArticlesCount: async (params = {}) => {
+    const response = await api.get('/api/v1/articles/count', { params })
     return response.data
   },
 }

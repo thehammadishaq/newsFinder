@@ -1,18 +1,41 @@
 import { useState, useEffect } from 'react'
-import { Search, FileText, Sparkles, Activity, TrendingUp, CheckCircle, XCircle, Clock } from 'lucide-react'
-import { Link } from 'react-router-dom'
+import { FileText, Sparkles, Activity, TrendingUp, CheckCircle, XCircle, Clock, ExternalLink } from 'lucide-react'
 import apiService from '../services/api'
 
 function DashboardPage() {
   const [status, setStatus] = useState(null)
+  const [articles, setArticles] = useState([])
+  const [articlesCount, setArticlesCount] = useState(0)
   const [loading, setLoading] = useState(true)
+  const [articlesLoading, setArticlesLoading] = useState(true)
   const [error, setError] = useState(null)
 
   useEffect(() => {
     loadStatus()
-    const interval = setInterval(loadStatus, 5000) // Refresh every 5 seconds
+    loadArticles()
+    const interval = setInterval(() => {
+      loadStatus()
+      loadArticles()
+    }, 10000) // Refresh every 10 seconds
     return () => clearInterval(interval)
   }, [])
+
+  const loadArticles = async () => {
+    try {
+      setArticlesLoading(true)
+      const [articlesData, countData] = await Promise.all([
+        apiService.getArticles({ limit: 10 }),
+        apiService.getArticlesCount(),
+      ])
+      setArticles(articlesData.articles || [])
+      setArticlesCount(countData.count || 0)
+    } catch (err) {
+      // Don't show error for articles, just log
+      console.error('Failed to load articles:', err)
+    } finally {
+      setArticlesLoading(false)
+    }
+  }
 
   const loadStatus = async () => {
     try {
@@ -74,98 +97,36 @@ function DashboardPage() {
 
   const stats = [
     {
-      title: 'Total Sites',
-      value: status?.total_sites || 0,
+      title: 'Articles in DB',
+      value: articlesCount,
       icon: FileText,
-      color: 'bg-black',
-      link: '/status',
-    },
-    {
-      title: 'Sites with Sitemap',
-      value: status?.sites_with_sitemap || 0,
-      icon: CheckCircle,
       color: 'bg-gray-800',
-    },
-    {
-      title: 'Sites with CSS Only',
-      value: status?.sites_with_css_only || 0,
-      icon: Activity,
-      color: 'bg-gray-700',
-    },
-    {
-      title: 'Failed Sites',
-      value: status?.sites_failed || 0,
-      icon: XCircle,
-      color: 'bg-gray-900',
-    },
-    {
-      title: 'Raw Articles',
-      value: status?.total_raw_articles || 0,
-      icon: TrendingUp,
-      color: 'bg-gray-600',
-    },
-    {
-      title: 'Cleaned Articles',
-      value: status?.total_cleaned_articles || 0,
-      icon: Sparkles,
-      color: 'bg-black',
-    },
-  ]
-
-  const quickActions = [
-    {
-      title: 'Discover Selectors',
-      description: 'Find sitemap and CSS selectors for news sites',
-      icon: Search,
-      link: '/discover',
-      color: 'bg-black hover:bg-gray-800',
-    },
-    {
-      title: 'Scrape Articles',
-      description: 'Extract articles using discovered selectors',
-      icon: FileText,
-      link: '/scrape',
-      color: 'bg-black hover:bg-gray-800',
-    },
-    {
-      title: 'Clean Articles',
-      description: 'Filter and deduplicate scraped articles',
-      icon: Sparkles,
-      link: '/clean',
-      color: 'bg-black hover:bg-gray-800',
-    },
-    {
-      title: 'View Status',
-      description: 'Monitor pipeline status and jobs',
-      icon: Activity,
-      link: '/status',
-      color: 'bg-black hover:bg-gray-800',
     },
   ]
 
   return (
-    <div className="space-y-8">
+    <div className="max-w-4xl mx-auto space-y-6">
       <div>
-        <h1 className="text-3xl font-bold text-black">Dashboard</h1>
-        <p className="mt-2 text-gray-700">Overview of your news scraping pipeline</p>
+        <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
+        <p className="mt-2 text-gray-600">Overview of your news scraping pipeline</p>
       </div>
 
       {/* Stats Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {stats.map((stat, index) => {
           const Icon = stat.icon
           return (
             <div
               key={index}
-              className="bg-white rounded-lg shadow p-6 hover:shadow-lg transition-shadow"
+              className="bg-white rounded-lg shadow p-4 hover:shadow-lg transition-shadow"
             >
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-gray-600">{stat.title}</p>
-                  <p className="text-3xl font-bold text-gray-900 mt-2">{stat.value}</p>
+                  <p className="text-xs font-medium text-gray-600">{stat.title}</p>
+                  <p className="text-2xl font-bold text-gray-900 mt-1">{stat.value}</p>
                 </div>
-                <div className={`${stat.color} p-3 rounded-full`}>
-                  <Icon className="h-6 w-6 text-white" />
+                <div className={`${stat.color} p-2 rounded-full`}>
+                  <Icon className="h-5 w-5 text-white" />
                 </div>
               </div>
             </div>
@@ -173,81 +134,80 @@ function DashboardPage() {
         })}
       </div>
 
-      {/* Quick Actions */}
+      {/* Recent Articles */}
       <div>
-        <h2 className="text-2xl font-bold text-gray-900 mb-4">Quick Actions</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          {quickActions.map((action, index) => {
-            const Icon = action.icon
-            return (
-              <Link
-                key={index}
-                to={action.link}
-                className={`${action.color} text-white rounded-lg p-6 hover:shadow-lg transition-all transform hover:scale-105`}
-              >
-                <Icon className="h-8 w-8 mb-3" />
-                <h3 className="text-lg font-semibold mb-2">{action.title}</h3>
-                <p className="text-sm opacity-90">{action.description}</p>
-              </Link>
-            )
-          })}
-        </div>
-      </div>
-
-      {/* Recent Sites */}
-      {status?.sites && status.sites.length > 0 && (
-        <div>
-          <h2 className="text-2xl font-bold text-gray-900 mb-4">Recent Sites</h2>
-          <div className="bg-white rounded-lg shadow overflow-hidden">
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Domain
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Status
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Raw Articles
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Cleaned Articles
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
-                {status.sites.slice(0, 10).map((site, index) => (
-                  <tr key={index} className="hover:bg-gray-50">
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                      {site.domain || 'N/A'}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                    <span
-                      className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full border ${
-                        site.overall_status === 'Success'
-                          ? 'bg-white text-black border-black'
-                          : site.overall_status === 'Error'
-                          ? 'bg-black text-white border-black'
-                          : 'bg-gray-100 text-black border-gray-300'
-                      }`}
-                    >
-                      {site.overall_status || 'Pending'}
-                    </span>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {site.raw_articles_count || 0}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {site.cleaned_articles_count || 0}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+        <h2 className="text-xl font-bold text-gray-900 mb-3">Recent Articles</h2>
+        {articlesLoading ? (
+          <div className="bg-white rounded-lg shadow p-6 text-center">
+            <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-black mx-auto"></div>
+            <p className="mt-2 text-sm text-gray-600">Loading articles...</p>
           </div>
-        </div>
-      )}
+        ) : articles.length > 0 ? (
+          <div className="bg-white rounded-lg shadow overflow-hidden">
+            <div className="divide-y divide-gray-200">
+              {articles.map((article, index) => (
+                <div key={index} className="p-4 hover:bg-gray-50 transition-colors">
+                  <div className="flex items-start justify-between">
+                    <div className="flex-1">
+                      <h3 className="text-base font-semibold text-gray-900 mb-1">
+                        {article.title || 'Untitled'}
+                      </h3>
+                      {article.summary && (
+                        <p className="text-xs text-gray-600 mb-2 line-clamp-2">
+                          {article.summary}
+                        </p>
+                      )}
+                      <div className="flex items-center gap-3 text-xs text-gray-500">
+                        {article.source && (
+                          <span className="font-medium text-gray-700">{article.source}</span>
+                        )}
+                        {article.date && (
+                          <span className="flex items-center">
+                            <Clock className="h-3 w-3 mr-1" />
+                            {new Date(article.date).toLocaleDateString('en-US', {
+                              year: 'numeric',
+                              month: 'short',
+                              day: 'numeric',
+                              hour: '2-digit',
+                              minute: '2-digit'
+                            })}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                    {article.url && (
+                      <a
+                        href={article.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="ml-3 p-1.5 text-gray-600 hover:text-black transition-colors"
+                        title="Open article"
+                      >
+                        <ExternalLink className="h-4 w-4" />
+                      </a>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+            {articlesCount > 10 && (
+              <div className="p-3 bg-gray-50 text-center border-t border-gray-200">
+                <p className="text-xs text-gray-600">
+                  Showing 10 of {articlesCount} articles
+                </p>
+              </div>
+            )}
+          </div>
+        ) : (
+          <div className="bg-white rounded-lg shadow p-6 text-center">
+            <FileText className="h-10 w-10 text-gray-400 mx-auto mb-3" />
+            <p className="text-sm text-gray-600">No articles found</p>
+            <p className="text-xs text-gray-500 mt-1">
+              Run the scraping and cleaning pipeline to see articles here
+            </p>
+          </div>
+        )}
+      </div>
     </div>
   )
 }

@@ -1,10 +1,8 @@
 import { BrowserRouter as Router, Routes, Route, Link, useLocation } from 'react-router-dom'
-import { LayoutDashboard, Search, FileText, Sparkles, Activity } from 'lucide-react'
+import { LayoutDashboard, Search, FileText } from 'lucide-react'
 import DashboardPage from './pages/DashboardPage'
 import DiscoverPage from './pages/DiscoverPage'
 import ScrapePage from './pages/ScrapePage'
-import CleanPage from './pages/CleanPage'
-import StatusPage from './pages/StatusPage'
 
 function App() {
   return (
@@ -16,8 +14,6 @@ function App() {
             <Route path="/" element={<DashboardPage />} />
             <Route path="/discover" element={<DiscoverPage />} />
             <Route path="/scrape" element={<ScrapePage />} />
-            <Route path="/clean" element={<CleanPage />} />
-            <Route path="/status" element={<StatusPage />} />
           </Routes>
         </div>
       </div>
@@ -32,8 +28,6 @@ function Navbar() {
     { path: '/', label: 'Dashboard', icon: LayoutDashboard },
     { path: '/discover', label: 'Discover', icon: Search },
     { path: '/scrape', label: 'Scrape', icon: FileText },
-    { path: '/clean', label: 'Clean', icon: Sparkles },
-    { path: '/status', label: 'Status', icon: Activity },
   ]
 
   return (

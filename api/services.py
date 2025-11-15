@@ -160,6 +160,7 @@ class ScrapingService:
     async def scrape_articles(
         self,
         stream_path: Optional[str] = None,
+        targets_json: Optional[str] = None,
         mode: str = "auto",
         site_concurrency: int = 1,
         target_concurrency: int = 6,
@@ -173,10 +174,6 @@ class ScrapingService:
         """
         loop = asyncio.get_event_loop()
         
-        # Default stream path
-        if not stream_path:
-            stream_path = "selection_extraction_report_stream.jsonl"
-        
         def _run_scraping():
             # Initialize DB
             try:
@@ -184,12 +181,26 @@ class ScrapingService:
             except Exception:
                 pass
             
-            # Check if stream file exists
-            if not os.path.exists(stream_path):
-                return {
-                    "status": "failed",
-                    "error": f"Stream file not found: {stream_path}",
-                }
+            # Set default stream path if not provided and not using targets_json
+            local_stream_path = stream_path
+            if not local_stream_path and not targets_json:
+                local_stream_path = "selection_extraction_report_stream.jsonl"
+            
+            # Check if stream file or targets JSON exists
+            if targets_json:
+                if not os.path.exists(targets_json):
+                    return {
+                        "status": "failed",
+                        "error": f"Targets JSON file not found: {targets_json}",
+                    }
+            else:
+                if not local_stream_path:
+                    local_stream_path = "selection_extraction_report_stream.jsonl"
+                if not os.path.exists(local_stream_path):
+                    return {
+                        "status": "failed",
+                        "error": f"Stream file not found: {local_stream_path}",
+                    }
             
             # Set timeout globally for the scraping pipeline
             ssp.SCRAPE_TIMEOUT = timeout
@@ -198,7 +209,7 @@ class ScrapingService:
             output_path = "stream_scraped_articles.jsonl"
             
             # Use the stream scraping pipeline's internal functions
-            # We'll process sites from the stream
+            # We'll process sites from the stream or targets JSON
             from stream_scraping_pipeline import (
                 _read_jsonl_once,
                 _normalize_targets,
@@ -208,9 +219,69 @@ class ScrapingService:
                 StatsCollector,
             )
             from urllib.parse import urlparse
+            import json
             
             processed_sites = set()
-            site_rows = _read_jsonl_once(stream_path)
+            
+            # Read from targets JSON if provided, otherwise from stream
+            if targets_json:
+                # Read targets JSON file (array format)
+                try:
+                    with open(targets_json, 'r', encoding='utf-8') as f:
+                        targets_arr = json.load(f)
+                except Exception as e:
+                    return {
+                        "status": "failed",
+                        "error": f"Failed to read targets JSON: {str(e)}",
+                    }
+                
+                # Convert targets JSON to stream format
+                site_rows = []
+                by_source: Dict[str, Dict[str, Any]] = {}
+                
+                for obj in targets_arr if isinstance(targets_arr, list) else []:
+                    try:
+                        src = (obj or {}).get('source') or ''
+                        st = (obj or {}).get('sourceType') or ''
+                        if not src or st not in ('sitemap', 'css'):
+                            continue
+                        
+                        cur = by_source.get(src) or {
+                            'result': {
+                                'url': src,
+                                'llmDetection': {'selectors': []},
+                                'cssFallback': {}
+                            }
+                        }
+                        
+                        if st == 'sitemap':
+                            for leaf in (obj.get('leafSitemaps') or []):
+                                lu = (leaf or {}).get('url')
+                                sel = (leaf or {}).get('selectors') or {}
+                                if lu and (sel.get('fields') or {}):
+                                    cur['result'].setdefault('llmDetection', {}).setdefault('selectors', []).append({
+                                        'url': lu,
+                                        'detectedSelectors': sel
+                                    })
+                        else:  # css
+                            sections = obj.get('sections') or []
+                            page_url = obj.get('pageUrl') or src
+                            if sections:
+                                cur['result']['cssFallback'] = {
+                                    'triggered': True,
+                                    'success': True,
+                                    'selectors': {
+                                        'pageUrl': page_url,
+                                        'sections': sections
+                                    }
+                                }
+                        by_source[src] = cur
+                    except Exception:
+                        continue
+                
+                site_rows = list(by_source.values())
+            else:
+                site_rows = _read_jsonl_once(local_stream_path)
             
             # Initialize writer and stats
             writer = Writer(output_path, queue_size=100)
@@ -324,7 +395,8 @@ class ScrapingService:
             
             return {
                 "status": "completed",
-                "stream_path": stream_path,
+                "stream_path": local_stream_path if not targets_json else None,
+                "targets_json": targets_json if targets_json else None,
                 "output_path": output_path,
                 "sites_processed": completed,
                 "total_articles": total_articles,

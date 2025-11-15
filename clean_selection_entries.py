@@ -30,6 +30,13 @@ from datetime import datetime, timezone
 import time
 import csv
 
+# Import articles store for MongoDB
+try:
+    from articles_store import init_articles_db, save_articles_batch
+    ARTICLES_STORE_AVAILABLE = True
+except ImportError:
+    ARTICLES_STORE_AVAILABLE = False
+
 try:
     from dateutil import parser as du_parser
 except Exception:
@@ -453,13 +460,23 @@ def clean_offline_from_streamed_articles(
     out_removed_duplicate_path: str = "articles_removed_duplicate.jsonl",
     out_removed_no_title_path: str = "articles_removed_no_title.jsonl",
     out_summary_path: str = "articles_cleaning_summary.json",
-) -> Dict[str, int]:
+  ) -> Dict[str, int]:
+    # Initialize articles DB if available
+    if ARTICLES_STORE_AVAILABLE:
+        try:
+            init_articles_db()
+        except Exception:
+            pass
+    
     total_input = 0
     kept_count = 0
     removed_no_date = 0
     removed_not_today = 0
     removed_duplicate = 0
     removed_no_title = 0
+    
+    # Batch articles for MongoDB
+    articles_batch = []
 
     # Per-site aggregation for CSV (site_domain -> counters)
     per_site: Dict[str, Dict[str, int]] = {}
@@ -597,16 +614,35 @@ def clean_offline_from_streamed_articles(
             summary = summary or ""
             source = _source_name_from_domain(domain)
 
-            f_keep.write(json.dumps({
+            article_data = {
                 "title": title,
                 "url": raw_url,
                 "summary": summary,
                 "date": dt.astimezone(timezone.utc).isoformat(),
                 "source": source,
-            }, ensure_ascii=False) + "\n")
+            }
+            
+            # Write to JSONL file
+            f_keep.write(json.dumps(article_data, ensure_ascii=False) + "\n")
+            
+            # Add to batch for MongoDB
+            if ARTICLES_STORE_AVAILABLE:
+                articles_batch.append(article_data)
+            
             if site_domain:
                 per_site[site_domain]["kept"] += 1
 
+    # Save articles batch to MongoDB
+    mongo_saved = 0
+    mongo_duplicates = 0
+    if ARTICLES_STORE_AVAILABLE and articles_batch:
+        try:
+            result = save_articles_batch(articles_batch)
+            mongo_saved = result.get("saved", 0)
+            mongo_duplicates = result.get("duplicates", 0)
+        except Exception:
+            pass
+    
     end_perf = time.perf_counter()
     summary = {
         "totalEntries": total_input,
@@ -619,6 +655,8 @@ def clean_offline_from_streamed_articles(
         "uniqueLeafSitemaps": 0,
         "runAtUtc": datetime.utcnow().isoformat() + "Z",
         "mode": "offline_stream_clean",
+        "mongo_saved": mongo_saved,
+        "mongo_duplicates": mongo_duplicates,
     }
 
     try:

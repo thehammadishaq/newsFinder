@@ -22,6 +22,7 @@ from api.models import (
     StatusResponse,
     SiteStatus,
     JobStatus,
+    FetchStreamRequest,
 )
 from api.services import (
     SelectionService,
@@ -217,6 +218,7 @@ async def _run_scraping(job_id: str, request: ScrapingRequest):
         
         result = await scraping_service.scrape_articles(
             stream_path=request.stream_path,
+            targets_json=request.targets_json,
             mode=request.mode,
             site_concurrency=request.site_concurrency,
             target_concurrency=request.target_concurrency,
@@ -241,6 +243,7 @@ async def scrape_articles_sync(request: ScrapingRequest):
     try:
         result = await scraping_service.scrape_articles(
             stream_path=request.stream_path,
+            targets_json=request.targets_json,
             mode=request.mode,
             site_concurrency=request.site_concurrency,
             target_concurrency=request.target_concurrency,
@@ -396,6 +399,86 @@ async def upload_urls_file(file: UploadFile = File(...)):
         raise HTTPException(status_code=500, detail=str(e))
 
 
+@app.post("/api/v1/upload/stream")
+async def upload_stream_file(file: UploadFile = File(...)):
+    """Upload stream file (JSONL) for scraping"""
+    try:
+        # Validate file extension
+        if not file.filename or not file.filename.endswith(('.jsonl', '.json')):
+            raise HTTPException(
+                status_code=400,
+                detail="File must be a JSONL or JSON file"
+            )
+        
+        # Save uploaded file to project root (where stream files are expected)
+        # Use original filename to make it easier to identify
+        timestamp = datetime.utcnow().strftime("%Y%m%d_%H%M%S")
+        safe_filename = file.filename.replace(" ", "_")
+        file_path = Path(f"{timestamp}_{safe_filename}")
+        
+        with open(file_path, "wb") as f:
+            content = await file.read()
+            f.write(content)
+        
+        return {
+            "message": "Stream file uploaded successfully",
+            "file_path": str(file_path),
+            "filename": file.filename,
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/api/v1/fetch/stream")
+async def fetch_stream_from_url(request: FetchStreamRequest):
+    """Fetch stream file from URL and save locally"""
+    try:
+        import httpx
+        from urllib.parse import urlparse
+        
+        url = request.url
+        
+        # Validate URL
+        parsed = urlparse(url)
+        if not parsed.scheme or not parsed.netloc:
+            raise HTTPException(status_code=400, detail="Invalid URL format")
+        
+        # Validate file extension
+        if not url.lower().endswith(('.jsonl', '.json')):
+            raise HTTPException(
+                status_code=400,
+                detail="URL must point to a JSONL or JSON file"
+            )
+        
+        # Fetch file from URL
+        async with httpx.AsyncClient(timeout=30.0) as client:
+            response = await client.get(url)
+            response.raise_for_status()
+            content = response.content
+        
+        # Save to local file
+        timestamp = datetime.utcnow().strftime("%Y%m%d_%H%M%S")
+        filename = url.split('/')[-1].split('?')[0] or "stream.jsonl"
+        safe_filename = filename.replace(" ", "_")
+        file_path = Path(f"{timestamp}_{safe_filename}")
+        
+        with open(file_path, "wb") as f:
+            f.write(content)
+        
+        return {
+            "message": "Stream file fetched successfully",
+            "file_path": str(file_path),
+            "filename": filename,
+            "url": url,
+        }
+    except httpx.HTTPError as e:
+        raise HTTPException(status_code=400, detail=f"Failed to fetch URL: {str(e)}")
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 @app.get("/api/v1/download/{file_type}")
 async def download_file(
     file_type: str = PathParam(..., description="Type: selectors, articles, cleaned, overview"),
@@ -420,6 +503,106 @@ async def download_file(
         filename=file_path.name,
         media_type="application/octet-stream",
     )
+
+
+# ============================================================================
+# ARTICLES ENDPOINTS
+# ============================================================================
+
+@app.get("/api/v1/articles")
+async def get_articles(
+    limit: int = Query(100, ge=1, le=1000, description="Number of articles to return"),
+    skip: int = Query(0, ge=0, description="Number of articles to skip"),
+    source: Optional[str] = Query(None, description="Filter by source"),
+    date_from: Optional[str] = Query(None, description="Filter from date (ISO format)"),
+    date_to: Optional[str] = Query(None, description="Filter to date (ISO format)"),
+):
+    """Get articles from MongoDB"""
+    try:
+        from articles_store import get_articles, get_articles_count
+        from datetime import datetime
+        
+        # Parse dates if provided
+        date_from_dt = None
+        date_to_dt = None
+        if date_from:
+            try:
+                date_from_dt = datetime.fromisoformat(date_from.replace("Z", "+00:00"))
+            except Exception:
+                pass
+        if date_to:
+            try:
+                date_to_dt = datetime.fromisoformat(date_to.replace("Z", "+00:00"))
+            except Exception:
+                pass
+        
+        articles = get_articles(
+            limit=limit,
+            skip=skip,
+            source=source,
+            date_from=date_from_dt,
+            date_to=date_to_dt,
+        )
+        
+        total = get_articles_count(
+            source=source,
+            date_from=date_from_dt,
+            date_to=date_to_dt,
+        )
+        
+        return {
+            "articles": articles,
+            "total": total,
+            "limit": limit,
+            "skip": skip,
+        }
+    except ImportError:
+        raise HTTPException(
+            status_code=500,
+            detail="Articles store not available. Make sure articles_store.py exists."
+        )
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/api/v1/articles/count")
+async def get_articles_count_endpoint(
+    source: Optional[str] = Query(None, description="Filter by source"),
+    date_from: Optional[str] = Query(None, description="Filter from date (ISO format)"),
+    date_to: Optional[str] = Query(None, description="Filter to date (ISO format)"),
+):
+    """Get total count of articles"""
+    try:
+        from articles_store import get_articles_count
+        from datetime import datetime
+        
+        date_from_dt = None
+        date_to_dt = None
+        if date_from:
+            try:
+                date_from_dt = datetime.fromisoformat(date_from.replace("Z", "+00:00"))
+            except Exception:
+                pass
+        if date_to:
+            try:
+                date_to_dt = datetime.fromisoformat(date_to.replace("Z", "+00:00"))
+            except Exception:
+                pass
+        
+        count = get_articles_count(
+            source=source,
+            date_from=date_from_dt,
+            date_to=date_to_dt,
+        )
+        
+        return {"count": count}
+    except ImportError:
+        raise HTTPException(
+            status_code=500,
+            detail="Articles store not available"
+        )
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 # ============================================================================

@@ -6,6 +6,11 @@ python -m venv .venv
 pip install -r requirements.txt
 python -m playwright install
 
+Option 1: Use the helper script (recommended)
+bash install_playwright_deps.sh
+
+Option 2: Run the command directly
+python3 -m playwright install-deps
 
 ==================================
 

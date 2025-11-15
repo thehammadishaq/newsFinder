@@ -140,33 +140,49 @@ def _classify_probe(probe: Optional[Dict[str, Any]]) -> Optional[Dict[str, Any]]
 
 
 def _browser_fetch_sitemap_text(url: str, timeout: float = 15.0) -> str:
-    try:
-        from playwright.sync_api import sync_playwright
-    except Exception:
-        return ''
-    try:
-        with sync_playwright() as p:
-            proxy_kw = {'server': PROXY_SERVER} if PROXY_SERVER and PROXY_SERVER.strip() else None
-            browser = p.chromium.launch(headless=True, proxy=proxy_kw) if proxy_kw else p.chromium.launch(headless=True)
-            context = browser.new_context(
-                user_agent=(
-                    'Mozilla/5.0 (Windows NT 10.0; Win64; x64) '
-                    'AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.0.0 Safari/537.36'
-                ),
-                viewport={'width': 1366, 'height': 864},
-            )
-            page = context.new_page()
-            try:
-                page.goto(url, wait_until='domcontentloaded', timeout=int(max(5.0, float(timeout)) * 1000))
-                xml_text = page.evaluate('( ) => document && (document.body && document.body.innerText) ? document.body.innerText : (document.documentElement ? document.documentElement.innerText : "")') or ''
-            finally:
+    """
+    Fetch sitemap text using Playwright browser.
+    This function runs in a thread-safe manner to avoid event loop conflicts.
+    """
+    def _run_playwright():
+        """Inner function that runs Playwright in a separate thread context"""
+        try:
+            from playwright.sync_api import sync_playwright
+        except Exception:
+            return ''
+        try:
+            with sync_playwright() as p:
+                proxy_kw = {'server': PROXY_SERVER} if PROXY_SERVER and PROXY_SERVER.strip() else None
+                browser = p.chromium.launch(headless=True, proxy=proxy_kw) if proxy_kw else p.chromium.launch(headless=True)
+                context = browser.new_context(
+                    user_agent=(
+                        'Mozilla/5.0 (Windows NT 10.0; Win64; x64) '
+                        'AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.0.0 Safari/537.36'
+                    ),
+                    viewport={'width': 1366, 'height': 864},
+                )
+                page = context.new_page()
                 try:
-                    browser.close()
-                except Exception:
-                    pass
-            return xml_text or ''
+                    page.goto(url, wait_until='domcontentloaded', timeout=int(max(5.0, float(timeout)) * 1000))
+                    xml_text = page.evaluate('( ) => document && (document.body && document.body.innerText) ? document.body.innerText : (document.documentElement ? document.documentElement.innerText : "")') or ''
+                finally:
+                    try:
+                        browser.close()
+                    except Exception:
+                        pass
+                return xml_text or ''
+        except Exception:
+            return ''
+    
+    # Run Playwright in a thread executor to avoid event loop conflicts
+    # This is necessary when called from async contexts (like FastAPI with uvloop)
+    try:
+        with cf.ThreadPoolExecutor(max_workers=1) as executor:
+            future = executor.submit(_run_playwright)
+            return future.result(timeout=timeout + 5.0)  # Add buffer for thread overhead
     except Exception:
-        return ''
+        # Fallback: try direct execution if thread executor fails
+        return _run_playwright()
 
 
 def _parse_sitemap_entries_from_text(xml_text: str) -> List[Dict[str, Any]]:

@@ -38,14 +38,18 @@ class ScrapingRequest(BaseModel):
         None,
         description="Path to selection_extraction_report_stream.jsonl (default: auto-detect)"
     )
+    targets_json: Optional[str] = Field(
+        None,
+        description="Path to selection_extraction_targets.json (alternative to stream_path)"
+    )
     mode: Literal["auto", "sitemap", "css", "both"] = Field(
         "auto",
         description="Scraping mode"
     )
-    site_concurrency: int = Field(1, ge=1, le=10, description="Site-level concurrency")
-    target_concurrency: int = Field(6, ge=1, le=50, description="Target-level concurrency")
-    timeout: float = Field(15.0, ge=1.0, le=120.0, description="Per-request timeout")
-    max_items: int = Field(500, ge=1, le=10000, description="Max items per source")
+    site_concurrency: int = Field(1, ge=1, description="Site-level concurrency")
+    target_concurrency: int = Field(6, ge=1, description="Target-level concurrency")
+    timeout: float = Field(15.0, ge=0.1, description="Per-request timeout")
+    max_items: int = Field(500, ge=1, description="Max items per source")
     
     class Config:
         json_schema_extra = {
@@ -71,6 +75,18 @@ class CleaningRequest(BaseModel):
         json_schema_extra = {
             "example": {
                 "input_path": "stream_scraped_articles.jsonl",
+            }
+        }
+
+
+class FetchStreamRequest(BaseModel):
+    """Request model for fetching stream file from URL"""
+    url: str = Field(..., description="URL to fetch JSON/JSONL file from")
+    
+    class Config:
+        json_schema_extra = {
+            "example": {
+                "url": "https://example.com/stream.jsonl",
             }
         }
 

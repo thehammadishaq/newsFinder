@@ -1,5 +1,5 @@
-import { useState } from 'react'
-import { Search, Upload, Loader2, CheckCircle, XCircle, AlertCircle } from 'lucide-react'
+import { useState, useEffect } from 'react'
+import { Search, Upload, Loader2, CheckCircle, XCircle, AlertCircle, FileText, Activity } from 'lucide-react'
 import apiService from '../services/api'
 
 function DiscoverPage() {
@@ -13,6 +13,8 @@ function DiscoverPage() {
   const [result, setResult] = useState(null)
   const [error, setError] = useState(null)
   const [useSync, setUseSync] = useState(false)
+  const [status, setStatus] = useState(null)
+  const [statusLoading, setStatusLoading] = useState(true)
 
   const addUrlField = () => {
     setUrls([...urls, ''])
@@ -60,6 +62,9 @@ function DiscoverPage() {
       if (!useSync && response.job_id) {
         // Poll for job status
         pollJobStatus(response.job_id)
+      } else if (useSync && response.status === 'completed') {
+        // If sync mode and completed, refresh status immediately
+        loadStatus()
       }
     } catch (err) {
       setError(err.response?.data?.detail || err.message || 'An error occurred')
@@ -78,6 +83,10 @@ function DiscoverPage() {
           clearInterval(interval)
           setResult(status)
           setLoading(false)
+          // Refresh status after discovery completes
+          if (status.status === 'completed') {
+            loadStatus()
+          }
         }
       } catch (err) {
         clearInterval(interval)
@@ -99,11 +108,75 @@ function DiscoverPage() {
     }
   }
 
+  useEffect(() => {
+    loadStatus()
+    const interval = setInterval(() => {
+      loadStatus()
+    }, 10000) // Refresh every 10 seconds
+    return () => clearInterval(interval)
+  }, [])
+
+  const loadStatus = async () => {
+    try {
+      const data = await apiService.getOverallStatus()
+      setStatus(data)
+    } catch (err) {
+      // Don't show error, just log
+      console.error('Failed to load status:', err)
+    } finally {
+      setStatusLoading(false)
+    }
+  }
+
+  const stats = [
+    {
+      title: 'Total Sites',
+      value: status?.total_sites || 0,
+      icon: FileText,
+      color: 'bg-black',
+    },
+    {
+      title: 'Sites with Sitemap',
+      value: status?.sites_with_sitemap || 0,
+      icon: CheckCircle,
+      color: 'bg-gray-800',
+    },
+    {
+      title: 'Sites with CSS Only',
+      value: status?.sites_with_css_only || 0,
+      icon: Activity,
+      color: 'bg-gray-700',
+    },
+  ]
+
   return (
     <div className="max-w-4xl mx-auto space-y-6">
       <div>
         <h1 className="text-3xl font-bold text-gray-900">Discover Selectors</h1>
         <p className="mt-2 text-gray-600">Find sitemap and CSS selectors for news websites</p>
+      </div>
+
+      {/* Stats Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        {stats.map((stat, index) => {
+          const Icon = stat.icon
+          return (
+            <div
+              key={index}
+              className="bg-white rounded-lg shadow p-4 hover:shadow-lg transition-shadow"
+            >
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-xs font-medium text-gray-600">{stat.title}</p>
+                  <p className="text-2xl font-bold text-gray-900 mt-1">{stat.value}</p>
+                </div>
+                <div className={`${stat.color} p-2 rounded-full`}>
+                  <Icon className="h-5 w-5 text-white" />
+                </div>
+              </div>
+            </div>
+          )
+        })}
       </div>
 
       <div className="bg-white rounded-lg shadow p-6">
@@ -297,6 +370,61 @@ function DiscoverPage() {
           <pre className="bg-gray-50 p-4 rounded-lg overflow-auto text-sm">
             {JSON.stringify(result, null, 2)}
           </pre>
+        </div>
+      )}
+
+      {/* Recent Sites */}
+      {status?.sites && status.sites.length > 0 && (
+        <div>
+          <h2 className="text-xl font-bold text-gray-900 mb-3">Recent Sites</h2>
+          <div className="bg-white rounded-lg shadow overflow-hidden">
+            <table className="min-w-full divide-y divide-gray-200">
+              <thead className="bg-gray-50">
+                <tr>
+                  <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Domain
+                  </th>
+                  <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Status
+                  </th>
+                  <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Raw Articles
+                  </th>
+                  <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Cleaned Articles
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="bg-white divide-y divide-gray-200">
+                {status.sites.slice(0, 10).map((site, index) => (
+                  <tr key={index} className="hover:bg-gray-50">
+                    <td className="px-4 py-2 whitespace-nowrap text-sm font-medium text-gray-900">
+                      {site.domain || 'N/A'}
+                    </td>
+                    <td className="px-4 py-2 whitespace-nowrap">
+                    <span
+                      className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full border ${
+                        site.overall_status === 'Success'
+                          ? 'bg-white text-black border-black'
+                          : site.overall_status === 'Error'
+                          ? 'bg-black text-white border-black'
+                          : 'bg-gray-100 text-black border-gray-300'
+                      }`}
+                    >
+                      {site.overall_status || 'Pending'}
+                    </span>
+                    </td>
+                    <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-500">
+                      {site.raw_articles_count || 0}
+                    </td>
+                    <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-500">
+                      {site.cleaned_articles_count || 0}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </div>
       )}
     </div>
